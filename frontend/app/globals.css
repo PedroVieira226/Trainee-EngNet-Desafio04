@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --font-crimson: "Crimson Text", serif;
+  --font-aclonica: "Aclonica", sans-serif;
+}
+
+@layer utilities {
+  /* Alterado para Degradê Linear: Começa 100% branco no topo/esquerda (0%) e vai até o laranja puro embaixo/direita (100%) */
+  .bg-degrade-zilla {
+    background: linear-gradient(135deg, #ffffff 0%, #ff8d28 100%) !important;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
