@@ -6,8 +6,7 @@
 
 - 🎓 Controle de presença em tempo real
 - 📊 Relatórios automáticos por turma e aluno
-- 🔐 Autenticação segura para professores e administradores
-- 🐳 Deploy com Docker em um único comando
+- 🔐 Autenticação para professores e administradores
 - 📱 Interface responsiva — Desktop, Tablet e Mobile
 
 [Começar](README.md)

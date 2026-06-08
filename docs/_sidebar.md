@@ -1,15 +1,14 @@
-* [Página Inicial](README.md)
-
 * **Produto & Requisitos**
   * [Visão Geral do Problema](produto/visao-geral.md)
+  * [Sprints e Cronograma](produto/sprints-cronograma.md)
   * [Requisitos](produto/requisitos.md)
+  * [Histórias de Usuário e DoR/DoD](produto/historias-usuario.md)
   * [Regras de Negócio](produto/regras-negocio.md)
   * [Prototipagem (UI/UX)](produto/ui-ux.md)
 
 * **Arquitetura & Infraestrutura**
   * [Decisões Técnicas (Stack)](arquitetura/decisoes.md)
   * [Modelagem do Banco de Dados](arquitetura/banco-de-dados.md)
-  * [Orquestração com Docker](arquitetura/docker.md)
 
 * **Guia de Desenvolvimento**
   * [Como rodar o projeto localmente](dev/setup.md)
