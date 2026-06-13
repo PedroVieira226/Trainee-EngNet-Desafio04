@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ConfigModule } from '@nestjs/config';
 
 import { Usuario } from './entities/usuario.entity';
 import { Turma } from './entities/turma.entity';
@@ -19,6 +20,8 @@ import { UsuariosModule } from './usuarios/usuarios.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    
     ThrottlerModule.forRoot([{
       ttl: 60000, 
       limit: 10,  
@@ -44,5 +47,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
     RelatoriosModule,
     UsuariosModule,
   ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
