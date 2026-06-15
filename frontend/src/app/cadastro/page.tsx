@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { cadastroSchema, CadastroFormData } from "../../validations/authSchema";
-import { api } from "../../utils/apiClient";
+import { api } from "@/src/services/apiClient";
 
 export default function Cadastro() {
   const router = useRouter();
