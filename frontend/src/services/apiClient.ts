@@ -33,8 +33,16 @@ export const apiClient = async <T = any>(
     config.body = JSON.stringify(data);
   }
 
-  const response = await fetch(endpoint, config);
+  const baseURL = process.env.NEXT_PUBLIC_API_URL || '';
+  
+  const cleanEndpoint = endpoint.replace(/^\/?api\//, '');
+  
+  const fullURL = baseURL 
+    ? `${baseURL.replace(/\/$/, '')}/${cleanEndpoint.replace(/^\//, '')}`
+    : `/api/${cleanEndpoint.replace(/^\//, '')}`; 
 
+  const response = await fetch(fullURL, config);
+  
   if (!response.ok) {
     let errorData;
     try {

@@ -1,32 +1,49 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ValidationPipe } from "@nestjs/common";
-import cookieParser = require("cookie-parser");
+import { ExpressAdapter } from "@nestjs/platform-express";
+import cookieParser from "cookie-parser"; 
 import helmet from "helmet";
+import express = require("express"); 
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+const server = express(); 
 
-  app.use(helmet());
-  app.use(cookieParser());
+server.use((req, res, next) => {
+  if (req.url.startsWith('/_backend')) {
+    req.url = req.url.replace('/_backend', '');
+    if (!req.url.startsWith('/')) {
+      req.url = '/' + req.url;
+    }
+  }
+  next();
+});
 
-  app.enableCors({
-    origin: "http://localhost:3001",
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true,
-  });
+let isAppInitialized = false;
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+export default async (req: any, res: any) => {
+  if (!isAppInitialized) {
+    const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
 
-  const porta = process.env.PORT || 3000;
-  await app.listen(porta, "0.0.0.0");
+    app.use(helmet());
+    app.use(cookieParser());
 
-  console.log(` Servidor na porta: ${porta}`);
-}
-bootstrap();
+    app.enableCors({
+      origin: ["http://localhost:3001", /\.vercel\.app$/],
+      methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+      credentials: true,
+    });
+
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
+
+    await app.init();
+    isAppInitialized = true;
+  }
+
+  return server(req, res);
+};
