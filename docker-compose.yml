@@ -38,10 +38,13 @@ services:
       context: ./frontend
     container_name: engnet_frontend
     ports:
-      - "3001:3000"
+      - "3001:3000" # Você acessará o site em http://localhost:3001
     environment:
+      # URL que o navegador (cliente) vai usar para falar com o backend exposto na sua máquina
       - NEXT_PUBLIC_API_URL=http://localhost:3000
-      - INTERNAL_API_URL=http://backend:3000
+      
+      # URL que o Next.js (servidor interno) vai usar para falar com o backend diretamente pela rede do Docker
+      - NEXT_PUBLIC_SERVER_API_URL=http://backend:3000
     depends_on:
       - backend
     volumes:

@@ -33,13 +33,30 @@ export const apiClient = async <T = any>(
     config.body = JSON.stringify(data);
   }
 
-  const baseURL = process.env.NEXT_PUBLIC_API_URL || '';
-  
-  const cleanEndpoint = endpoint.replace(/^\/?api\//, '');
-  
-  const fullURL = baseURL 
-    ? `${baseURL.replace(/\/$/, '')}/${cleanEndpoint.replace(/^\//, '')}`
-    : `/api/${cleanEndpoint.replace(/^\//, '')}`; 
+  // Verifica se o código está rodando no Servidor (Node) ou no Navegador (window)
+  const isServer = typeof window === 'undefined';
+
+  const baseURL = isServer
+    ? (process.env.NEXT_PUBLIC_SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || '')
+    : (process.env.NEXT_PUBLIC_API_URL || '');
+  let fullURL: string;
+
+  // 2. Se o endpoint já for uma URL absoluta (ex: http://...), usa ele direto
+  if (/^https?:\/\//i.test(endpoint)) {
+    fullURL = endpoint;
+  } else {
+    // Remove o prefixo '/api' ou 'api/' se ele existir no início do endpoint
+    const cleanEndpoint = endpoint.replace(/^\/?api\//, '');
+
+    if (baseURL) {
+      // Se houver baseURL (ex: backend separado no Render/Railway)
+      fullURL = `${baseURL.replace(/\/$/, '')}/${cleanEndpoint.replace(/^\//, '')}`;
+    } else {
+      // Se NÃO houver baseURL (usa rotas relativas do próprio Next.js)
+      // Mantém o /api/ porque a rota interna do Next precisa dele
+      fullURL = `/api/${cleanEndpoint.replace(/^\//, '')}`;
+    }
+  }
 
   const response = await fetch(fullURL, config);
   
