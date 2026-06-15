@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ThrottlerModule } from "@nestjs/throttler";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 
 import { Usuario } from "./modules/entities/usuario.entity";
 import { Turma } from "./modules/entities/turma.entity";
@@ -29,16 +29,38 @@ import { UsuariosModule } from "./modules/usuarios/usuarios.module";
       },
     ]),
 
-    TypeOrmModule.forRoot({
-      type: "postgres",
-      url: process.env.DATABASE_URL,
-      host: process.env.DB_HOST || "localhost",
-      port: parseInt(process.env.DB_PORT, 10) || 5432,
-      username: process.env.DB_USERNAME || process.env.DB_USER || "postgres",
-      password: process.env.DB_PASSWORD || "postgres",
-      database: process.env.DB_DATABASE || process.env.DB_NAME || "engnet_presenca",
-      entities: [Usuario, Turma, Aluno, Aula, Frequencia],
-      synchronize: true,
+    // Mudamos para forRootAsync para garantir que o ConfigService injete as envs corretamente
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get<string>("DATABASE_URL");
+
+        // Se houver DATABASE_URL (Ambiente do Railway)
+        if (databaseUrl) {
+          return {
+            type: "postgres",
+            url: databaseUrl,
+            entities: [Usuario, Turma, Aluno, Aula, Frequencia],
+            synchronize: false, // Segurança máxima em produção
+            ssl: {
+              rejectUnauthorized: false, // Necessário para a conexão externa com o Railway
+            },
+          };
+        }
+
+        // Fallback para o seu ambiente de desenvolvimento Local (localhost)
+        return {
+          type: "postgres",
+          host: configService.get<string>("DB_HOST", "localhost"),
+          port: configService.get<number>("DB_PORT", 5432),
+          username: configService.get<string>("DB_USERNAME") || configService.get<string>("DB_USER", "postgres"),
+          password: configService.get<string>("DB_PASSWORD", "postgres"),
+          database: configService.get<string>("DB_DATABASE") || configService.get<string>("DB_NAME", "engnet_presenca"),
+          entities: [Usuario, Turma, Aluno, Aula, Frequencia],
+          synchronize: true, // Cria e altera tabelas automaticamente em dev
+        };
+      },
     }),
 
     AuthModule,
