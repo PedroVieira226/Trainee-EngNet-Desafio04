@@ -1,17 +1,23 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ValidationPipe } from "@nestjs/common";
+import { ExpressAdapter } from "@nestjs/platform-express";
 import cookieParser = require("cookie-parser");
 import helmet from "helmet";
+import * as express from "express";
+
+const server = express();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
 
   app.use(helmet());
   app.use(cookieParser());
 
+
   app.enableCors({
-    origin: "http://localhost:3001",
+    origin: ["http://localhost:3001", /\.vercel\.app$/],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   });
@@ -24,9 +30,9 @@ async function bootstrap() {
     }),
   );
 
-  const porta = process.env.PORT || 3000;
-  await app.listen(porta, "0.0.0.0");
-
-  console.log(` Servidor na porta: ${porta}`);
+  await app.init();
 }
+
 bootstrap();
+
+export default server;
