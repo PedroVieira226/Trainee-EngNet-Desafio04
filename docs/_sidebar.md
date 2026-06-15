@@ -1,5 +1,6 @@
 * **Produto & Requisitos**
   * [Visão Geral do Problema](produto/visao-geral.md)
+  * [Descoberta e Levantamento](produto/descoberta.md)
   * [Sprints e Cronograma](produto/sprints-cronograma.md)
   * [Requisitos](produto/requisitos.md)
   * [Histórias de Usuário e DoR/DoD](produto/historias-usuario.md)

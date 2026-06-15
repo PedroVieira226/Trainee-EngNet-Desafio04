@@ -7,7 +7,6 @@
 - 🎓 Controle de presença em tempo real
 - 📊 Relatórios automáticos por turma e aluno
 - 🔐 Autenticação para professores e administradores
-- 📱 Interface responsiva — Desktop, Tablet e Mobile
 
 [Começar](README.md)
 [Ver no GitHub](https://github.com/gpaulovit/Trainee-EngNet-Desafio04)

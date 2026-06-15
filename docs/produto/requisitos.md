@@ -1,6 +1,6 @@
-# 8. Requisitos de Software
+# Requisitos de Software
 
-## 8.1. Requisitos funcionais
+## 1. Requisitos funcionais
 
 | ID | Nome | Descrição | CP mãe | OE |
 | :--- | :--- | :--- | :--- | :--- |
@@ -18,7 +18,7 @@
 | **RF12** | Consultar frequência individual | Gerar relatório exibindo o percentual de presença e o histórico de um aluno específico. | **CP4** - Geração Automática de Relatórios | **OE4** - Gerar relatórios instantâneos e precisos |
 | **RF13** | Consultar lista de faltosos | Gerar relatório destacando os alunos que possuem baixa frequência ou faltas excedentes. | **CP4** - Geração Automática de Relatórios | **OE4** - Gerar relatórios instantâneos e precisos |
 
-## 8.2. Requisitos não funcionais
+## 2. Requisitos não funcionais
 
 | ID | Nome | Descrição | Classificação URPS+ | Classificação Sommerville |
 | :--- | :--- | :--- | :--- | :--- |

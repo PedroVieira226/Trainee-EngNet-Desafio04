@@ -38,4 +38,4 @@ Para que um item saia do fluxo de desenvolvimento como "Concluído", ele deve ob
 - [ ] **Tratamento de Erros Básicos:** Fluxos alternativos (ex: dados inválidos, instabilidade) possuem tratamentos simples com feedback visual amigável ao usuário.
 - [ ] **Revisão de Código (Code Review):** Pelo menos um outro membro da equipe revisou visualmente a alteração no código (*Pull Request*) ou validou o comportamento da tela, garantindo ausência de erros grosseiros.
 - [ ] **Integração Contínua:** O código foi integrado na branch `main` sem conflitos estruturais, mantendo a separação entre Frontend (Next.js) e Backend (NestJS).
-- [ ] **Deploy Bem-sucedido:** A funcionalidade testada e aprovada está implantada (*deploy*) e rodando com sucesso no ambiente final de entrega (ex: Vercel/Netlify).
+- [ ] **Deploy Bem-sucedido:** A funcionalidade testada e aprovada está implantada (*deploy*) e rodando com sucesso no ambiente final de entrega.

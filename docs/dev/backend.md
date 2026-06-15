@@ -8,7 +8,6 @@ O NestJS é um framework focado em escalabilidade e arquitetura limpa. Diferente
 
 * `src/app.module.ts`: O módulo raiz da aplicação.
 * `src/main.ts`: O ponto de entrada que inicia o servidor.
-* `src/prisma/` (ou `typeorm/`): Configuração de conexão com o banco de dados.
 
 ### Domínios do Sistema (`src/modules/`)
 

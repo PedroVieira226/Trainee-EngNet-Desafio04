@@ -25,15 +25,6 @@ Onde definimos as cores globais, importamos as fontes e ajustamos as configuraç
 
 ---
 
-## ⚡ Atenção: Componentes de Servidor vs. Cliente
-
-O Next.js moderno possui duas formas de renderizar uma tela. Saber a diferença é crucial para não quebrar a aplicação:
-
-* **Server Components (Padrão):** Carregam super rápido e são ótimos para SEO. Eles rodam no servidor. Use para páginas estáticas, leitura de dados diretos e layouts estruturais.
-* **Client Components (`"use client"`):** Precisam ser usados sempre que a página tiver interatividade com o usuário. Vai usar botões de clique, animações, `useState` ou `useEffect`? Você deve colocar a diretiva `"use client"` na primeira linha do arquivo.
-
----
-
 ## 🚀 Resumo Prático para o Dia a Dia
 
 * Precisa criar uma nova **tela**? 👉 `frontend/src/app/`
@@ -44,6 +35,6 @@ O Next.js moderno possui duas formas de renderizar uma tela. Saber a diferença 
 ## Boas Práticas do Time
 
 * Foque em criar componentes de UI reutilizáveis, principalmente formulários e cartões de exibição.
-* Centralize a URL da API e todas as chamadas externas no arquivo `services/api.ts`.
+* Centralize a URL da API e todas as chamadas externas no arquivo `services/apiCLient.ts`.
 * Utilize o Tailwind CSS seguindo os padrões de responsividade (Mobile First).
 * Pense na experiência de uso: o diferencial é garantir um tema visual confortável e navegação fluida em celulares e tablets.
