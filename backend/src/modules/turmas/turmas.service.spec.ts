@@ -1,105 +1,65 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TurmasService } from './turmas.service';
-import * as crypto from 'crypto';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Turma } from '../entities/turma.entity';
 
 describe('TurmasService', () => {
   let service: TurmasService;
 
-  // Arrange
+  const mockRepository = {
+    create: jest.fn(),
+    save: jest.fn(),
+    find: jest.fn(),
+    findOne: jest.fn(),
+    remove: jest.fn(),
+    createQueryBuilder: jest.fn(() => ({
+      loadRelationCountAndMap: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([]),
+    })),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TurmasService],
+      providers: [
+        TurmasService,
+        {
+          provide: getRepositoryToken(Turma),
+          useValue: mockRepository,
+        },
+      ],
     }).compile();
 
     service = module.get<TurmasService>(TurmasService);
 
-    // Limpa os mocks antes de cada teste para não haver vazamento de estado
     jest.clearAllMocks();
-  });
-
-  // Limpa os timers falsos após a execução da suíte
-  afterEach(() => {
-    jest.useRealTimers();
   });
 
   it('deve ser instanciado corretamente', () => {
     expect(service).toBeDefined();
   });
 
-  describe('create()', () => {
-    it('deve criar uma nova turma e retornar a turma criada (Caixa Preta - Regra de Negócio)', () => {
-      // Arrange 
-      const payload = {
-        nome: 'Física I',
-        codigo: 'FIS101',
-        horario: 'Seg/Qua 08h-10h',
-        quantidadeAlunos: 30,
-      };
-
-      // Act 
-      const resultado = service.create(payload);
-
-      // Assert 
-      expect(resultado).toHaveProperty('id');
-      expect(resultado.nome).toEqual('Física I');
-      expect(resultado.codigo).toEqual('FIS101');
-      expect(resultado.criadoEm).toBeInstanceOf(Date); 
-    });
-
-    it('deve invocar crypto.randomUUID e instanciar Date internamente (Caixa Branca - Estrutura Interna)', () => {
-      // Arrange
-      const payload = {
-        nome: 'Química I',
-        codigo: 'QUI101',
-        horario: 'Ter/Qui 14h-16h',
-        quantidadeAlunos: 25,
-      };
-
-      const mockId = '12345678-1234-1234-1234-123456789012';
+  describe('criar()', () => {
+    it('deve criar uma turma com sucesso', async () => {
+      const dto: any = { nome: 'Turma A' };
+      const mockResult = { id: '1', ...dto, professor: { id: 'prof-1' } };
       
-      // Spy
-      const cryptoSpy = jest.spyOn(crypto, 'randomUUID').mockReturnValue(mockId as any);
-      
-      // Fake Timers
-      const dataFixa = new Date('2026-01-01T10:00:00Z');
-      jest.useFakeTimers().setSystemTime(dataFixa);
+      mockRepository.create.mockReturnValue(mockResult);
+      mockRepository.save.mockResolvedValue(mockResult);
 
-      // Act
-      const resultado = service.create(payload);
+      const result = await service.criar(dto, 'prof-1');
 
-      // Assert 
-      expect(cryptoSpy).toHaveBeenCalledTimes(1); 
-      expect(resultado.id).toEqual(mockId); 
-      expect(resultado.criadoEm).toEqual(dataFixa);
+      expect(mockRepository.create).toHaveBeenCalled();
+      expect(mockRepository.save).toHaveBeenCalledWith(mockResult);
+      expect(result).toEqual(mockResult);
     });
   });
 
-  describe('findAll()', () => {
-    it('deve retornar todas as turmas cadastradas (Caixa Preta - Regra de Negócio)', () => {
-      // Arrange 
-      service.create({
-        nome: 'Cálculo I',
-        codigo: 'MAT101',
-        horario: 'Ter/Qui 10h-12h',
-        quantidadeAlunos: 40,
-      });
-
-      // Act
-      const turmas = service.findAll();
-
-      // Assert
-      expect(turmas).toBeInstanceOf(Array);
-      expect(turmas.length).toBe(1);
-      expect(turmas[0].codigo).toEqual('MAT101');
-    });
-
-    it('deve retornar um array vazio caso não existam turmas (Caixa Preta - Valor Limite)', () => {
-      // Act
-      const turmas = service.findAll();
-
-      // Assert
-      expect(turmas).toBeInstanceOf(Array);
-      expect(turmas.length).toBe(0);
+  describe('listarTodas()', () => {
+    it('deve listar turmas', async () => {
+      const result = await service.listarTodas('prof-1');
+      expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith('turma');
+      expect(result).toEqual([]);
     });
   });
 });

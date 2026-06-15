@@ -1,16 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TurmasController } from './turmas.controller';
 import { TurmasService } from './turmas.service';
-import { CreateTurmaDto } from './dto/create-turma.dto';
 
 describe('TurmasController', () => {
   let controller: TurmasController;
   let service: TurmasService;
 
-  // Mock do TurmasService
   const mockTurmasService = {
-    create: jest.fn(),
-    findAll: jest.fn(),
+    criar: jest.fn(),
+    listarTodas: jest.fn(),
+    remover: jest.fn(),
+    atualizar: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -19,7 +19,7 @@ describe('TurmasController', () => {
       providers: [
         {
           provide: TurmasService,
-          useValue: mockTurmasService, // mock
+          useValue: mockTurmasService,
         },
       ],
     }).compile();
@@ -34,60 +34,28 @@ describe('TurmasController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('create()', () => {
-    it('deve repassar o CreateTurmaDto para o TurmasService e retornar o resultado (Caixa Branca - Spy/Mock)', () => {
-      // Arrange
-      const dto: CreateTurmaDto = {
-        nome: 'Física I',
-        codigo: 'FIS101',
-        horario: 'Seg/Qua 08h-10h',
-        quantidadeAlunos: 30,
-      };
+  describe('criar()', () => {
+    it('deve repassar o dto e o professorId para o service', async () => {
+      const dto: any = { nome: 'Nova Turma' };
+      const req = { user: { id: 'prof-123' } };
+      mockTurmasService.criar.mockResolvedValue({ id: '1', ...dto });
 
-      const resultadoMockado = {
-        id: 'mock-id-123',
-        ...dto,
-        criadoEm: new Date(),
-      };
+      const result = await controller.criar(dto, req);
 
-      // Mock
-      mockTurmasService.create.mockReturnValue(resultadoMockado);
-
-      // Act
-      const resultado = controller.create(dto);
-
-      // Assert
-      // 1. Validamos se o controller delegou corretamente para o service
-      expect(service.create).toHaveBeenCalledTimes(1);
-      expect(service.create).toHaveBeenCalledWith(dto);
-      
-      // 2. Validamos se o controller retornou exatamente o que o service devolveu
-      expect(resultado).toEqual(resultadoMockado);
+      expect(service.criar).toHaveBeenCalledWith(dto, 'prof-123');
+      expect(result).toEqual({ id: '1', ...dto });
     });
   });
 
-  describe('findAll()', () => {
-    it('deve solicitar todas as turmas ao TurmasService e retornar a lista (Caixa Branca - Spy/Mock)', () => {
-      // Arrange
-      const resultadoMockado = [
-        {
-          id: 'mock-id-123',
-          nome: 'Física I',
-          codigo: 'FIS101',
-          horario: 'Seg/Qua 08h-10h',
-          quantidadeAlunos: 30,
-          criadoEm: new Date(),
-        },
-      ];
+  describe('listarTodas()', () => {
+    it('deve buscar turmas usando o professorId', async () => {
+      const req = { user: { id: 'prof-123' } };
+      mockTurmasService.listarTodas.mockResolvedValue([{ id: '1' }]);
 
-      mockTurmasService.findAll.mockReturnValue(resultadoMockado);
+      const result = await controller.listarTodas(req);
 
-      // Act
-      const resultado = controller.findAll();
-
-      // Assert
-      expect(service.findAll).toHaveBeenCalledTimes(1);
-      expect(resultado).toEqual(resultadoMockado);
+      expect(service.listarTodas).toHaveBeenCalledWith('prof-123');
+      expect(result).toEqual([{ id: '1' }]);
     });
   });
 });

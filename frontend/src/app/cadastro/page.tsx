@@ -25,25 +25,22 @@ export default function Cadastro() {
     setCarregando(true);
 
     try {
-      const resposta = await fetch("/api/usuarios", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ nome: data.nome, email: data.email, senha: data.senha, perfil: "professor" }),
-      });
+          const dadosErro = await api.post("usuarios", {
+            nome: data.nome,
+            email: data.email,
+            senha: data.senha,
+            perfil: "professor",
+          });
 
-      if (resposta.ok) {
-        toast.success("Conta criada com sucesso!");
-        setTimeout(() => router.push("/"), 2000);
-      } else {
-        const dadosErro = await resposta.json();
-        if (Array.isArray(dadosErro.message)) {
-          toast.error(dadosErro.message[0]);
-        } else {
-          toast.error(dadosErro.message || "Erro ao criar conta.");
+          toast.success("Conta criada com sucesso!");
+          setTimeout(() => router.push("/"), 2000);
+
+        } catch (error: any) {
+          const mensagemErro = error.message || "Erro ao criar conta.";
+          toast.error(mensagemErro);
+        } finally {
+          setCarregando(false);
         }
-      }
     } catch (error) {
       toast.error("Falha ao contactar o servidor. Verifique o back-end.");
     } finally {
@@ -53,7 +50,7 @@ export default function Cadastro() {
 
   return (
     <main className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
-      
+
       <div className="w-full max-w-md mb-8 text-center">
         <h2 className="font-serif text-4xl text-primary-900 dark:text-primary-100 font-bold drop-shadow-sm">
           Zilla University
