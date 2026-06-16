@@ -19,10 +19,11 @@ export class AuthController {
 
     const token = await this.authService.login(usuarioValidado);
 
+    // Configuração ajustada para Cross-Domain (Vercel <-> Railway)
     res.cookie('access_token', token.access_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: true,          // Forçado true para garantir HTTPS em produção
+      sameSite: 'none',      // Permitir tráfego entre domínios diferentes
       maxAge: 3600000,
     });
 
@@ -31,10 +32,11 @@ export class AuthController {
 
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
+    // Ajustado também no logout para limpar corretamente o cookie cross-domain
     res.clearCookie('access_token', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: true,
+      sameSite: 'none',
     });
 
     return { message: 'Logout realizado com sucesso' };
