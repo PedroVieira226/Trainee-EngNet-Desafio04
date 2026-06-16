@@ -3,14 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Header from "../../components/Header";
+import { useTurmas, Turma } from "../../hooks/useTurmas";
+import { api } from "../../services/apiClient";
 
-interface TurmaResumo {
-  id: string;
-  nome: string;
-  codigo: string;
-}
-
-interface AlunoResumo {
+interface AlunoResSummary {
   id: string;
   nome: string;
   matricula: string;
@@ -28,102 +24,88 @@ interface AlunoFaltoso {
 export default function Relatorios() {
   const router = useRouter();
 
-  const [turmas, setTurmas] = useState<TurmaResumo[]>([]);
-  const [alunos, setAlunos] = useState<AlunoResumo[]>([]);
-  const [turmaSelecionada, setTurmaSelecionada] = useState("");
-  const [alunoSelecionado, setAlunoSelecionado] = useState("");
+  // Utilizando o hook padrão para gerenciamento de turmas
+  const { turmas, carregarTurmas } = useTurmas();
+  
+  const [alunos, setAlunos] = useState<AlunoResSummary[]>([]);
+  const [turmaSelecionada, setTurmaSelecionada] = useState<Turma | null>(null);
+  const [alunoSelecionadoId, setAlunoSelecionadoId] = useState("");
   const [resumoTurma, setResumoTurma] = useState<any>(null);
   const [resumoAluno, setResumoAluno] = useState<any>(null);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
 
+  const turmaAtualId = useMemo(() => turmaSelecionada?.id || "", [turmaSelecionada]);
+
+  // Carrega as turmas ao montar o componente (padrão useTurmas)
   useEffect(() => {
-    const carregarTurmas = async () => {
-      try {
-        const resposta = await fetch("/api/turmas", { credentials: "include" });
-        if (!resposta.ok) return;
-
-        const dados = await resposta.json();
-        setTurmas(dados);
-        if (dados.length > 0) {
-          setTurmaSelecionada(dados[0].id);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar turmas", error);
+    carregarTurmas().then((dados) => {
+      if (dados && dados.length > 0) {
+        setTurmaSelecionada(dados[0]);
       }
-    };
+    });
+  }, [carregarTurmas]);
 
-    carregarTurmas();
-  }, []);
-
+  // Carrega a lista de alunos utilizando o cliente de API customizado
   useEffect(() => {
     const carregarAlunos = async () => {
-      if (!turmaSelecionada) {
+      if (!turmaAtualId) {
         setAlunos([]);
-        setAlunoSelecionado("");
+        setAlunoSelecionadoId("");
         return;
       }
 
       try {
-        const resposta = await fetch(`/api/alunos/turma/${turmaSelecionada}`, {
-          credentials: "include",
-        });
-
-        if (!resposta.ok) {
-          setAlunos([]);
-          setAlunoSelecionado("");
-          return;
-        }
-
-        const dados = await resposta.json();
-        setAlunos(dados);
-        setAlunoSelecionado((atual) => atual || dados[0]?.id || "");
+        const dados = await api.get<AlunoResSummary[]>(`/api/alunos/turma/${turmaAtualId}`);
+        setAlunos(dados || []);
+        setAlunoSelecionadoId((atual) => atual || dados[0]?.id || "");
       } catch (error) {
         console.error("Erro ao carregar alunos", error);
         setAlunos([]);
-        setAlunoSelecionado("");
+        setAlunoSelecionadoId("");
       }
     };
 
     carregarAlunos();
-  }, [turmaSelecionada]);
+  }, [turmaAtualId]);
 
+  // Carrega os relatórios via Promise.all utilizando a instância do Axios/api
   useEffect(() => {
     const carregarRelatorios = async () => {
-      if (!turmaSelecionada) return;
+      if (!turmaAtualId) return;
 
       setCarregando(true);
       setErro("");
 
       try {
-        const [respostaTurma, respostaAluno] = await Promise.all([
-          fetch(`/api/relatorios/turma/${turmaSelecionada}`, { credentials: "include" }),
-          alunoSelecionado
-            ? fetch(`/api/relatorios/aluno/${alunoSelecionado}`, { credentials: "include" })
+        const [dadosTurma, dadosAluno] = await Promise.all([
+          api.get<any>(`/api/relatorios/turma/${turmaAtualId}`),
+          alunoSelecionadoId
+            ? api.get<any>(`/api/relatorios/aluno/${alunoSelecionadoId}`)
             : Promise.resolve(null),
         ]);
 
-        if (!respostaTurma?.ok) {
+        if (!dadosTurma) {
           setErro("Não foi possível carregar o relatório da turma.");
         } else {
-          setResumoTurma(await respostaTurma.json());
+          setResumoTurma(dadosTurma);
         }
 
-        if (respostaAluno && !respostaAluno.ok) {
+        if (alunoSelecionadoId && !dadosAluno) {
           setErro((mensagemAtual) => mensagemAtual || "Não foi possível carregar o relatório do aluno.");
-        } else if (respostaAluno) {
-          setResumoAluno(await respostaAluno.json());
+        } else if (dadosAluno) {
+          setResumoAluno(dadosAluno);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Erro ao carregar relatórios", error);
-        setErro("Falha de ligação ao servidor.");
+        setErro(error.message || "Falha de ligação ao servidor.");
       } finally {
         setCarregando(false);
       }
     };
 
     carregarRelatorios();
-  }, [turmaSelecionada, alunoSelecionado]);
+  }, [turmaAtualId, alunoSelecionadoId]);
 
   const faltosos = useMemo<AlunoFaltoso[]>(() => resumoTurma?.alunosFaltosos ?? [], [resumoTurma]);
   const historicoTurma = useMemo(() => resumoTurma?.historicoTurma ?? [], [resumoTurma]);
@@ -150,7 +132,7 @@ export default function Relatorios() {
     const aluno = resumoAluno?.aluno;
     const dataGeracao = new Date().toLocaleString("pt-BR");
 
-    doc.setFillColor(30, 41, 59); // slate-800
+    doc.setFillColor(30, 41, 59);
     doc.rect(0, 0, 210, 24, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(18);
@@ -189,8 +171,8 @@ export default function Relatorios() {
         `${item.taxaPresenca}%`,
       ]),
       styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [239, 68, 68] }, // red-500
-      alternateRowStyles: { fillColor: [254, 242, 242] }, // red-50
+      headStyles: { fillColor: [239, 68, 68] },
+      alternateRowStyles: { fillColor: [254, 242, 242] },
     });
 
     if (aluno) {
@@ -205,7 +187,7 @@ export default function Relatorios() {
           resumoAluno?.taxaAssiduidade ?? "0%",
         ]],
         styles: { fontSize: 10, cellPadding: 3 },
-        headStyles: { fillColor: [16, 185, 129] }, // emerald-500
+        headStyles: { fillColor: [16, 185, 129] },
       });
     }
 
@@ -223,7 +205,7 @@ export default function Relatorios() {
         head: [["Data", "Horário", "Presentes", "Faltas", "Faltosos"]],
         body: historicoRows,
         styles: { fontSize: 8, cellPadding: 2 },
-        headStyles: { fillColor: [71, 85, 105] }, // slate-600
+        headStyles: { fillColor: [71, 85, 105] },
       });
     }
 
@@ -268,21 +250,23 @@ export default function Relatorios() {
             {/* ================= COLUNA DA ESQUERDA: VISÃO DA TURMA ================= */}
             <div className="flex-1 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 flex flex-col gap-6">
               
-              {/* Buscar Turma */}
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                   Visão Geral da Turma
                 </label>
                 <div className="relative">
                   <select
-                    value={turmaSelecionada}
-                    onChange={(e) => setTurmaSelecionada(e.target.value)}
+                    value={turmaSelecionada?.id || ""}
+                    onChange={(e) => {
+                      const t = turmas.find((item) => item.id === e.target.value);
+                      setTurmaSelecionada(t || null);
+                    }}
                     className="w-full h-11 px-4 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm appearance-none"
                   >
                     <option value="" disabled hidden>Selecione uma Turma...</option>
-                    {turmas.map((turma) => (
-                      <option key={turma.id} value={turma.id}>
-                        {turma.codigo} - {turma.nome}
+                    {turmas.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.codigo} - {t.nome}
                       </option>
                     ))}
                   </select>
@@ -300,7 +284,6 @@ export default function Relatorios() {
                   Presença Mensal Média
                 </span>
                 <div className="w-full h-[140px] flex items-end justify-around px-2 relative mt-4">
-                  {/* Linhas guias do gráfico */}
                   <div className="absolute inset-x-0 bottom-[25%] border-t border-dashed border-gray-200 dark:border-slate-700 pointer-events-none" />
                   <div className="absolute inset-x-0 bottom-[50%] border-t border-dashed border-gray-200 dark:border-slate-700 pointer-events-none" />
                   <div className="absolute inset-x-0 bottom-[75%] border-t border-dashed border-gray-200 dark:border-slate-700 pointer-events-none" />
@@ -340,13 +323,13 @@ export default function Relatorios() {
                     <div className="text-sm text-gray-500 dark:text-gray-400 py-2">Frequência da turma está regular.</div>
                   ) : (
                     faltosos.map((aluno) => (
-                    <div key={aluno.id} className="flex justify-between items-center text-sm bg-white dark:bg-slate-800 p-3 rounded-lg border border-red-200 dark:border-red-800/50">
-                      <span className="font-medium text-gray-800 dark:text-gray-200 truncate pr-4">{aluno.nome}</span>
-                      <span className="text-xs font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-2.5 py-1 rounded-md shrink-0">
-                        {100 - aluno.taxaPresenca}% faltas
-                      </span>
-                    </div>
-                  ))
+                      <div key={aluno.id} className="flex justify-between items-center text-sm bg-white dark:bg-slate-800 p-3 rounded-lg border border-red-200 dark:border-red-800/50">
+                        <span className="font-medium text-gray-800 dark:text-gray-200 truncate pr-4">{aluno.nome}</span>
+                        <span className="text-xs font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-2.5 py-1 rounded-md shrink-0">
+                          {100 - aluno.taxaPresenca}% faltas
+                        </span>
+                      </div>
+                    ))
                   )}
                 </div>
               </div>
@@ -355,15 +338,14 @@ export default function Relatorios() {
             {/* ================= COLUNA DA DIREITA: VISÃO DO ALUNO ================= */}
             <div className="flex-1 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 flex flex-col gap-6">
               
-              {/* Buscar Aluno */}
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                   Visão Individual
                 </label>
                 <div className="relative">
                   <select
-                    value={alunoSelecionado}
-                    onChange={(e) => setAlunoSelecionado(e.target.value)}
+                    value={alunoSelecionadoId}
+                    onChange={(e) => setAlunoSelecionadoId(e.target.value)}
                     className="w-full h-11 px-4 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm appearance-none"
                   >
                     <option value="" disabled hidden>Selecione um Aluno...</option>
