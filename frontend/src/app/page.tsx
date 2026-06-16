@@ -7,6 +7,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { authSchema, AuthFormData } from "../validations/authSchema";
+// 1. IMPORTAMOS O NOSSO CLIENTE HTTP CONFIGURADO
+import { api } from "@/src/services/apiClient";
 
 export default function Login() {
   const router = useRouter();
@@ -24,21 +26,19 @@ export default function Login() {
     setCarregando(true);
 
     try {
-      const resposta = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: data.email, senha: data.senha }),
+      // 2. USAMOS O NOSSO CLIENTE HTTP EM VEZ DO FETCH NATIVO
+      // Ele já sabe o caminho do Railway e injeta o prefixo /api/ automaticamente
+      await api.post("auth/login", {
+        email: data.email,
+        senha: data.senha,
       });
 
-      if (resposta.ok) {
-        toast.success("Login bem-sucedido!");
-        router.push("/controle");
-      } else {
-        const erroData = await resposta.json();
-        toast.error(erroData.message || "Credenciais inválidas");
-      }
-    } catch (error) {
-      toast.error("Erro ao conectar ao servidor.");
+      toast.success("Login bem-sucedido!");
+      router.push("/controle");
+    } catch (error: any) {
+      // 3. ADAPTAMOS O TRATAMENTO DE ERRO PARA COLETAR A MENSAGEM DO NOSSO ApiError
+      const mensagemErro = error.data?.message || error.message || "Credenciais inválidas";
+      toast.error(mensagemErro);
     } finally {
       setCarregando(false);
     }
