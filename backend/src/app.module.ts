@@ -42,7 +42,7 @@ import { UsuariosModule } from "./modules/usuarios/usuarios.module";
             type: "postgres",
             url: databaseUrl,
             entities: [Usuario, Turma, Aluno, Aula, Frequencia],
-            synchronize: false, // Segurança máxima em produção
+            synchronize: true, // Segurança máxima em produção
             ssl: {
               rejectUnauthorized: false, // Necessário para a conexão externa com o Railway
             },
