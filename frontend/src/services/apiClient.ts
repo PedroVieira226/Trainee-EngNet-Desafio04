@@ -33,15 +33,8 @@ export const apiClient = async <T = any>(
     config.body = JSON.stringify(data);
   }
 
-  // Verifica se o código está rodando no Servidor (Node) ou no Navegador (window)
-  const isServer = typeof window === 'undefined';
-
-  // Fallback rígido para o Railway caso as variáveis da Vercel falhem em produção
-  const railwayURL = "https://trainee-engnet-desafio04-production.up.railway.app";
-
-  const baseURL = isServer
-    ? (process.env.NEXT_PUBLIC_SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || railwayURL)
-    : (process.env.NEXT_PUBLIC_API_URL || railwayURL);
+  // Define a URL do Railway de forma fixa e direta para blindar contra falhas de ENV na Vercel
+  const baseURL = "https://trainee-engnet-desafio04-production.up.railway.app";
     
   let fullURL: string;
 
@@ -52,9 +45,8 @@ export const apiClient = async <T = any>(
     // Remove o prefixo '/api' ou 'api/' se ele existir no início do endpoint passado na chamada
     const cleanEndpoint = endpoint.replace(/^\/?api\//, '');
 
-    // Garante a formatação limpando barras soltas e injetando o prefixo obrigatório do NestJS (/api)
-    const formattedBase = baseURL.replace(/\/$/, '');
-    fullURL = `${formattedBase}/api/${cleanEndpoint.replace(/^\//, '')}`;
+    // Garante a injeção do prefixo obrigatório do NestJS (/api) mapeado no Railway
+    fullURL = `${baseURL}/api/${cleanEndpoint.replace(/^\//, '')}`;
   }
 
   const response = await fetch(fullURL, config);
